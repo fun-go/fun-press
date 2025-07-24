@@ -2,7 +2,7 @@ import { defineConfig } from 'vitepress'
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
-  title: "Fun Websocket Framework",
+  title: "Fun Framework",
   description: "Fun 是一个现代化的实时应用框架，专为构建基于 WebSocket 的后端服务而设计。它提供了一套简洁而强大的工具，帮助开发者快速构建具有实时通信功能的应用程序。" ,
   head: [
     ['link', { rel: 'icon', href: 'https://fun.assets.cyi.cc/logo.png' }]
