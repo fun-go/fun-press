@@ -7,12 +7,6 @@ export default defineConfig({
   head: [
     ['link', { rel: 'icon', href: 'https://fun.assets.cyi.cc/logo.png' }]
   ],
-  locales: {
-    '/': {
-      lang: 'zh-CN',
-      label: '简体中文'
-    }
-  },
   themeConfig: {
     nav: [
       { text: '首页', link: '/' },
