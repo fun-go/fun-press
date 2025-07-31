@@ -25,6 +25,9 @@ export default defineConfig({
           { text: 'mock(待开发)' },
           { text: '单元测试(待开发)' },
           { text: '微服务(待开发)' },
+          { text: '日志系统', link: '/log'},
+          { text: '参数验证' , link: '/check'},
+          { text: '文件上传(待开发)' },
           { text: '代码生成', link: '/gen' },
           { text: '错误处理', link: '/error.md' },
         ]
