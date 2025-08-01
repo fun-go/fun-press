@@ -51,15 +51,14 @@ func (s *MyService) CreateUser(dto UserDto) *User {
 3. 实时监听方法（Proxy方法）：
 ```go
 func (s *MyService) WatchEvents(close fun.ProxyClose) *string {
-    go func() {
-        // 发送实时数据
-        s.Ctx.Send(s.Ctx.Id, s.Ctx.RequestId, "实时数据")
+    // 发送实时数据
+    s.Ctx.Push(s.Ctx.Id, s.Ctx.RequestId, "实时数据")
         
-        // 在适当时候关闭连接
-        close(func() {
-            // 清理资源
-        })
-    }()
+    // 在适当时候关闭连接
+    close(func() {
+        // 清理资源
+    })
+    
     text := "开始监听事件"
     return &text
 }
