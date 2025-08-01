@@ -10,7 +10,8 @@ export default defineConfig({
   themeConfig: {
     nav: [
       { text: '首页', link: '/' },
-      { text: '文档', link: '/fun' }
+      { text: '文档', link: '/fun' },
+      { text: 'QQ群' ,link:"https://qm.qq.com/q/UqAiwtrisW"}
     ],
     logo: 'https://fun.assets.cyi.cc/logo.png',
     sidebar: [
