@@ -23,12 +23,10 @@ export default defineConfig({
           { text: '服务(service)', link: '/service' },
           { text: '守卫(guard)', link: '/guard' },
           { text: '依赖注入', link: '/dependency-injection' },
-          { text: 'mock(待开发)' },
+          { text: 'mock', link: '/mock' },
           { text: '单元测试(待开发)' },
-          { text: '微服务(待开发)' },
           { text: '日志系统', link: '/log'},
           { text: '参数验证' , link: '/check'},
-          { text: '文件上传(待开发)' },
           { text: '代码生成', link: '/gen' },
           { text: '错误处理', link: '/error.md' },
         ]
