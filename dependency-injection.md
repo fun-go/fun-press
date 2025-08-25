@@ -41,7 +41,7 @@ func (config *Config) New() {
 ```
 
 
-当组件被注入时，框架会自动调用 [New](file:///Users/yuye/go/pkg/mod/github.com/matoous/go-nanoid/v2@v2.1.0/gonanoid.go#L75-L98) 方法（如果存在）。
+当组件被注入时，框架会自动调用 [New] 方法（如果存在）。
 
 ## 依赖注入标签
 
@@ -65,7 +65,7 @@ func (config *Config) New() {
 ```
 
 
-在上面的例子中，`X` 结构体的 [Config](file:///Volumes/未命名/代码/fun/dist/test/Dependency/Config.ts#L1-L4) 字段会被自动注入一个 [Config](file:///Volumes/未命名/代码/fun/dist/test/Dependency/Config.ts#L1-L4) 实例。
+在上面的例子中，`X` 结构体的 [Config] 字段会被自动注入一个 [Config] 实例。
 
 ## 服务中的依赖注入
 

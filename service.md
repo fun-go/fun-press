@@ -8,7 +8,7 @@
 
 ### 基本服务结构
 
-要定义一个服务，需要创建一个 Go 结构体，并将 [fun.Ctx](file:///Volumes/未命名/代码/fun/ctx.go#L2-L12) 作为第一个字段嵌入：
+要定义一个服务，需要创建一个 Go 结构体，并将 [fun.Ctx] 作为第一个字段嵌入：
 
 ```go
 type UserService struct {
@@ -176,7 +176,7 @@ await api.UserService.WatchUser(proxy);
 
 ## 错误处理
 
-在服务方法中，可以通过返回 [fun.Error](file:///Volumes/未命名/代码/fun/result.go#L21-L23) 来向客户端发送错误信息：
+在服务方法中，可以通过返回 [fun.Error] 来向客户端发送错误信息：
 
 ```go
 func (ctx UserService) GetUser(id int64) *User {
@@ -199,7 +199,7 @@ func (ctx UserService) GetUser(id int64) *User {
 
 1. **保持服务专注**：每个服务应该专注于特定的业务领域
 2. **合理使用依赖注入**：只注入真正需要的依赖
-3. **正确处理错误**：使用 [fun.Error](file:///Volumes/未命名/代码/fun/result.go#L21-L23) 返回有意义的错误信息
+3. **正确处理错误**：使用 [fun.Error] 返回有意义的错误信息
 4. **验证输入数据**：使用验证标签确保数据合法性
 5. **优雅关闭资源**：在代理方法中正确处理连接关闭
 
