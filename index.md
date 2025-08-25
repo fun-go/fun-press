@@ -29,7 +29,6 @@ features:
   details: 一键生成 TypeScript 客户端 SDK，自动处理数据序列化和接口调用，提升开发效率
 - title: 拦截器机制
   details: 提供 Guard 拦截器功能，支持在方法执行前后插入通用逻辑，如权限验证、日志记录等
-- title: 结构化传输
-  details: 支持复杂数据结构的自动序列化和反序列化，包括嵌套对象和数组，简化数据处理流程
+- title: 自动验证
+  details: 集成 validator/v10 验证库，支持丰富的字段验证规则，自动处理参数校验
 ---
-

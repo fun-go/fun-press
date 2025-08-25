@@ -1,37 +1,67 @@
-# 错误处理
+您说得对，让我简化错误码的说明。
+
+# Fun 框架错误处理文档
 
 ## 概述
 
-Fun 框架提供了多种错误处理机制，允许开发者在服务方法中处理和返回错误。框架会自动捕获错误并将其转换为标准的响应格式发送给客户端。
+Fun 框架提供了一套完整的错误处理机制，能够处理业务逻辑错误、参数验证错误、网络错误等各种异常情况。框架通过统一的错误响应格式，让客户端能够方便地识别和处理不同类型的错误。
 
-## 错误类型
+## 错误码定义
 
-Fun 框架定义了以下几种错误状态：
+Fun 框架定义了以下几种错误类型：
 
-1. **successCode (0)** - 成功状态
-2. **cellErrorCode (1)** - 服务内部错误
-3. **errorCode (2)** - 业务逻辑错误
-4. **closeErrorCode (3)** - 连接关闭错误
+| 错误类型 | 常量名 | 值 | 说明 |
+|---------|--------|---|------|
+| 成功 | successCode | 0 | 请求处理成功 |
+| 调用错误 | cellErrorCode | 1 | 框架内部错误或参数验证错误 |
+| 业务错误 | errorCode | 2 | 业务逻辑错误 |
+| 连接关闭错误 | closeErrorCode | 3 | 客户端主动关闭连接 |
 
-## 错误处理方法
+## 错误响应格式
 
-### 1. 使用 panic 抛出错误
+所有错误响应都遵循统一的格式：
 
-最简单的错误处理方式是在服务方法中使用 panic：
+```json
+{
+  "Id": "请求ID",
+  "Code": 400,
+  "Data": null,
+  "Msg": "错误消息",
+  "Status": 3
+}
+```
+
+
+各字段说明：
+- `Id`: 请求唯一标识符
+- `Code`: 错误代码（仅在业务错误时存在）
+- `Data`: 返回数据（错误时通常为null）
+- `Msg`: 错误消息描述
+- `Status`: 错误状态码（对应上面表格中的值）
+
+## 服务端错误处理
+
+### 返回业务错误
+
+在服务方法中，必须通过 panic 抛出错误，不能使用 return：
 
 ```go
-type UserService struct {
-    Ctx fun.Ctx
-}
-
-func (s *UserService) GetUser(dto UserDto) *User {
-    if id == "" {
-        panic("用户ID不能为空")
+func (ctx UserService) GetUser(dto GetUserDto) *User {
+    // 业务逻辑检查
+    if dto.ID <= 0 {
+        // 返回业务错误，对应 Status=2
+        panic(fun.Error(400, "用户ID无效"))
     }
     
-    user := findUserById(id)
+    user, err := findUserByID(dto.ID)
+    if err != nil {
+        // 返回数据库错误，对应 Status=2
+        panic(fun.Error(500, "数据库查询失败"))
+    }
+    
     if user == nil {
-        panic("用户不存在")
+        // 返回找不到用户错误，对应 Status=2
+        panic(fun.Error(404, "用户不存在"))
     }
     
     return user
@@ -39,156 +69,107 @@ func (s *UserService) GetUser(dto UserDto) *User {
 ```
 
 
+### 参数验证错误
 
-
-
-### 2. 使用 Error 函数
-
-使用 [fun.Error] 函数返回带有错误码的错误：
+框架会自动处理参数验证错误（对应 Status=1）：
 
 ```go
-func (s *UserService) UpdateUser(dto UpdateUserDto) *User {
-    if dto.Id == "" {
-        panic(fun.Error(1001, "用户ID不能为空"))
+type CreateUserDto struct {
+    Username string `validate:"required,min=3,max=20"`
+    Email    string `validate:"required,email"`
+    Age      int    `validate:"gte=0,lte=150"`
+}
+
+func (ctx UserService) CreateUser(dto CreateUserDto) *User {
+    // 框架会自动验证 DTO 参数
+    // 如果验证失败，会自动返回验证错误信息，对应 Status=1
+    
+    // 业务逻辑
+    user := &User{
+        Username: dto.Username,
+        Email:    dto.Email,
+        Age:      dto.Age,
     }
     
-    user := findUserById(dto.Id)
-    if user == nil {
-        panic(fun.Error(1002, "用户不存在"))
+    // 保存用户
+    err := saveUser(user)
+    if err != nil {
+        panic(fun.Error(500, "创建用户失败")) // 对应 Status=2
     }
-    
-    // 更新用户逻辑
-    user.Name = dto.Name
-    updateUser(user)
     
     return user
-}
-```
-
-## 守卫中的错误处理
-
-在守卫中，可以通过返回 [Result] 对象来阻止请求：
-
-```go
-type AuthGuard struct{}
-
-func (g *AuthGuard) Guard(serviceName string, methodName string, state map[string]string) *fun.Result[any] {
-    token := state["token"]
-    if token == "" {
-        msg := "未提供访问令牌"
-        return &fun.Result[any]{
-            Msg:    &msg,
-            Status: fun.ErrorCode,
-        }
-    }
-    
-    if !isValidToken(token) {
-        msg := "无效的访问令牌"
-        return &fun.Result[any]{
-            Msg:    &msg,
-            Status: fun.ErrorCode,
-        }
-    }
-    
-    // 验证通过，返回 nil
-    return nil
 }
 ```
 
 
 ## 客户端错误处理
 
-在 TypeScript 客户端中，错误会被封装在 [Result] 对象中：
+### TypeScript 客户端错误处理
+
+客户端通过检查 `result.status` 来判断请求结果：
 
 ```typescript
-    const result = await client.UserService.GetUser({Id:"123"});
+import { resultStatus, result } from "fun-client";
 
-if (result.status === 0) {
-    // 成功处理
-    console.log("用户信息:", result.data);
-} else if (result.status === 1 || result.status === 2) {
-    // 错误处理
-    console.error("错误:", result.msg);
-    if (result.code) {
-        console.error("错误码:", result.code);
-    }
+const result = await client.userService.getUser({id: 123});
+
+switch (result.status) {
+    case resultStatus.success:
+        // 处理成功响应 (Status=0)
+        console.log("用户信息:", result.data);
+        break;
+        
+    case resultStatus.callError:
+        // 处理调用错误（如参数验证失败、服务内部错误等）(Status=1)
+        console.error("调用错误:", result.msg);
+        break;
+        
+    case resultStatus.error:
+        // 处理业务错误 (Status=2)
+        console.error("业务错误:", result.msg);
+        // 可以根据错误代码进行不同处理
+        if (result.code === 404) {
+            console.log("用户未找到");
+        } else if (result.code === 403) {
+            console.log("权限不足");
+        }
+        break;
+        
+    case resultStatus.networkError:
+        // 处理网络错误 (Status=3)
+        console.error("网络连接错误");
+        break;
 }
 ```
 
 
+## 最佳实践
 
-## 错误处理最佳实践
-
-### 1. 明确错误类型
+### 1. 合理使用错误类型
 
 ```go
-func (s *UserService) ProcessUser(dto UserDto) *User {
-    // 参数验证错误 - 使用 callError
-    if dto.Name == "" {
-        panic(fun.Error(2000,"用户名不能为空"))
+func (ctx OrderService) CreateOrder(dto CreateOrderDto) *Order {
+    // 参数验证错误由框架自动处理 (Status=1)
+    
+    // 业务逻辑错误 (Status=2)
+    if !ctx.hasSufficientBalance(dto.UserID, dto.Amount) {
+        panic(fun.Error(400, "余额不足"))
     }
     
-    // 业务逻辑错误 - 使用 Error 并指定错误码
-    if !isValidEmail(dto.Email) {
-        panic(fun.Error(2001, "邮箱格式不正确"))
+    // 权限错误 (Status=2)
+    if !ctx.hasPermission(dto.UserID, "create_order") {
+        panic(fun.Error(403, "权限不足"))
     }
     
-    // 系统错误 - 直接 panic 字符串
-    user, err := database.CreateUser(dto)
+    // 创建订单
+    order, err := createOrder(dto)
     if err != nil {
-        panic(fmt.Sprintf("创建用户失败: %v", err))
+        panic(fun.Error(500, "创建订单失败")) // Status=2
     }
     
-    return user
-}
-```
-
-### 3. 错误日志记录
-
-```go
-import (
-    "log"
-)
-
-func (s *UserService) CreateUser(dto CreateUserDto) *User {
-    user := &User{Name: dto.Name, Email: dto.Email}
-    
-    if err := saveUser(user); err != nil {
-        // 记录错误日志
-        log.Printf("创建用户失败: %v, 用户数据: %+v", err, dto)
-        panic(fun.CallError("创建用户失败"))
-    }
-    
-    log.Printf("用户创建成功: %s", user.Id)
-    return user
+    return order
 }
 ```
 
 
-## 错误响应格式
-
-Fun 框架返回的错误响应具有以下格式：
-
-```json
-{
-    "id": "请求ID",
-    "code": 1001,
-    "msg": "错误信息",
-    "status": 2
-}
-```
-
-
-字段说明：
-- `id`: 请求ID，用于追踪请求
-- `code`: 错误码（仅在使用 [fun.Error] 时存在）
-- `msg`: 错误信息
-- `status`: 错误状态码（0=成功, 1=内部错误, 2=业务错误, 3=连接关闭）
-
-## 注意事项
-
-1. panic 会导致当前请求处理中断，但不会影响服务器运行
-2. 守卫中返回非 nil 的 [Result] 对象会阻止请求继续执行
-3. 客户端应始终检查响应状态码以正确处理错误
-4. 建议为不同类型的错误定义明确的错误码
-5. 敏感信息不应包含在错误消息中
+通过合理的错误处理机制，Fun 框架能够帮助开发者构建更加健壮和用户友好的应用程序。需要注意的是，所有错误都必须通过 panic 抛出，不能使用 return 返回错误。

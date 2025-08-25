@@ -1,14 +1,18 @@
 # 依赖注入
 
-## 概述
+## 什么是依赖注入？
 
-Fun 框架提供了一个内置的依赖注入系统，允许您在服务和守卫中自动注入依赖项。依赖注入使得组件之间的耦合度降低，提高了代码的可测试性和可维护性。
+依赖注入（Dependency Injection, DI）是 Fun 框架的核心特性之一。它允许框架自动管理和注入服务、拦截器和其他组件所需的依赖项，从而简化组件之间的耦合，提高代码的可测试性和可维护性。
 
-## 基本用法
+## 依赖注入工作原理
 
-### 服务中的依赖注入
+Fun 框架使用反射机制来实现依赖注入。当服务或拦截器被注册时，框架会分析其结构体字段，并自动注入所需的依赖项。依赖项可以是其他服务、配置对象、数据库连接等。
 
-在服务结构体中，通过 `fun:"auto"` 标签启用自动依赖注入。注意，第一层依赖（直接依赖）不需要 `fun:"auto"` 标签，只有第二层及更深的依赖才需要：
+## 定义可注入组件
+
+### 基本组件结构
+
+要创建一个可注入的组件，需要定义一个结构体：
 
 ```go
 type Database struct {
@@ -16,114 +20,218 @@ type Database struct {
     Port int
 }
 
-type UserService struct {
-    Ctx fun.Ctx        // 第一层依赖，不需要 fun:"auto" 标签
-    DB  *Database      // 第一层依赖，不需要 fun:"auto" 标签
+type Config struct {
+    Database *Database
+}
+```
+
+
+### 初始化方法
+
+组件可以定义一个 [New] 方法来进行初始化：
+
+```go
+type Config struct {
+    Page int8
 }
 
-func (s *UserService) GetUser(id string) *User {
-    // 可以直接使用注入的 DB 实例
-    fmt.Printf("Connecting to database at %s:%d\n", s.DB.Host, s.DB.Port)
+func (config *Config) New() {
+    config.Page = 5
+}
+```
+
+
+当组件被注入时，框架会自动调用 [New](file:///Users/yuye/go/pkg/mod/github.com/matoous/go-nanoid/v2@v2.1.0/gonanoid.go#L75-L98) 方法（如果存在）。
+
+## 依赖注入标签
+
+### `fun:"auto"` 标签
+
+通过 `fun:"auto"` 标签，可以指定需要自动注入的字段：
+
+```go
+type Config struct {
+    Page int8
+}
+
+type X struct {
+    Name   string
+    Config *Config `fun:"auto"`
+}
+
+func (config *Config) New() {
+    config.Page = 5
+}
+```
+
+
+在上面的例子中，`X` 结构体的 [Config](file:///Volumes/未命名/代码/fun/dist/test/Dependency/Config.ts#L1-L4) 字段会被自动注入一个 [Config](file:///Volumes/未命名/代码/fun/dist/test/Dependency/Config.ts#L1-L4) 实例。
+
+## 服务中的依赖注入
+
+### 服务结构体
+
+服务的第一层字段会自动注入，无需使用 `fun:"auto"` 标签：
+
+```go
+type UserService struct {
+    fun.Ctx
+    Database *Database  // 自动注入
+    Config   *Config    // 自动注入
+}
+```
+
+
+### 嵌套依赖注入
+
+对于嵌套结构中的字段，需要使用 `fun:"auto"` 标签：
+
+```go
+type UserService struct {
+    fun.Ctx
+    Database *Database
+    Config   *Config
+    Logger   *Logger `fun:"auto"`  // 嵌套依赖需要标签
+}
+```
+
+
+## 拦截器中的依赖注入
+
+### 拦截器结构体
+
+与服务类似，拦截器的第一层字段也会自动注入：
+
+```go
+type AuthGuard struct {
+    Config *Config  // 自动注入
+    Redis  *Redis   // 自动注入
+}
+```
+
+
+### 嵌套依赖注入
+
+拦截器中的嵌套依赖同样需要使用 `fun:"auto"` 标签：
+
+```go
+type AuthGuard struct {
+    Config *Config
+    Redis  *Redis
+    Logger *Logger `fun:"auto"`  // 嵌套依赖需要标签
+}
+```
+
+
+## 全局依赖注入
+
+### Wired 函数
+
+可以使用 [fun.Wired] 函数手动获取已注入的组件实例：
+
+```go
+// 获取单例实例
+config := fun.Wired[Config]()
+
+// 使用组件
+fmt.Println(config.Page)
+```
+
+
+## 实际示例
+
+### 数据库连接示例
+
+```go
+type DatabaseConfig struct {
+    Host     string
+    Port     int
+    Username string
+    Password string
+}
+
+type Database struct {
+    Config *DatabaseConfig `fun:"auto"`
+    Client *sql.DB
+}
+
+func (db *Database) New() {
+    // 初始化数据库连接
+    connectionString := fmt.Sprintf("%s:%s@tcp(%s:%d)/mydb", 
+        db.Config.Username, db.Config.Password, 
+        db.Config.Host, db.Config.Port)
+    client, err := sql.Open("mysql", connectionString)
+    if err != nil {
+        panic(err)
+    }
+    db.Client = client
+}
+
+type UserService struct {
+    fun.Ctx
+    Database *Database  // 自动注入
+}
+
+func (s UserService) GetUser(id int) *User {
+    // 使用注入的数据库连接
+    user := &User{}
+    err := s.Database.Client.QueryRow("SELECT * FROM users WHERE id = ?", id).Scan(&user.Id, &user.Name)
+    if err != nil {
+        panic(fun.Error(500, "Failed to fetch user"))
+    }
+    return user
+}
+```
+
+
+### 配置管理示例
+
+```go
+type AppConfig struct {
+    DebugMode bool
+    PageSize  int
+}
+
+func (config *AppConfig) New() {
+    config.DebugMode = true
+    config.PageSize = 20
+}
+
+type Logger struct {
+    Config *AppConfig `fun:"auto"`
+}
+
+func (logger *Logger) New() {
+    if logger.Config.DebugMode {
+        fmt.Println("Logger initialized in debug mode")
+    }
+}
+
+type UserService struct {
+    fun.Ctx
+    Logger *Logger  // 自动注入
+}
+
+func (s UserService) GetUser(id int) *User {
+    s.Logger.Info("Fetching user with id:", id)
+    // 实现获取用户的逻辑
     return &User{Id: id, Name: "John Doe"}
 }
 ```
 
 
-### 深层依赖注入
-
-当需要注入第二层及更深的依赖时，需要使用 `fun:"auto"` 标签：
-
-```go
-type Config struct {
-    DatabaseURL string
-    APIKey      string
-}
-
-func (c *Config) New() {
-    // 初始化配置
-    c.DatabaseURL = "localhost:5432"
-    c.APIKey = "your-api-key"
-}
-
-type Database struct {
-    Config *Config `fun:"auto"` // 第二层依赖，需要 fun:"auto" 标签
-}
-
-func (db *Database) New() {
-    // 使用注入的配置进行初始化
-    fmt.Printf("Connecting to database: %s\n", db.Config.DatabaseURL)
-}
-```
-
-
-## 守卫中的依赖注入
-
-守卫也支持依赖注入，与服务类似，第一层依赖不需要 `fun:"auto"` 标签：
-
-```go
-type AuthService struct {
-    SecretKey string
-}
-
-func (a *AuthService) New() {
-    a.SecretKey = "my-secret-key"
-}
-
-type AuthGuard struct {
-    Auth *AuthService // 第一层依赖，不需要 fun:"auto" 标签
-}
-
-func (g *AuthGuard) Guard(serviceName string, methodName string, state map[string]string) *fun.Result[any] {
-    token := state["token"]
-    if token != g.Auth.SecretKey {
-        return &fun.Result[any]{
-            Msg:    &"Unauthorized",
-            Status: fun.ErrorCode,
-        }
-    }
-    return nil // 验证通过
-}
-```
-
-
-对于深层依赖，需要使用 `fun:"auto"` 标签：
-
-```go
-type Logger struct {
-    Level string
-}
-
-type AuthService struct {
-    SecretKey string
-    Log       *Logger `fun:"auto"` // 第二层依赖，需要 fun:"auto" 标签
-}
-
-func (a *AuthService) New() {
-    a.SecretKey = "my-secret-key"
-    fmt.Println("Auth service initialized with log level:", a.Log.Level)
-}
-```
-## 依赖注入规则
-
-1. 服务结构体的第一个字段必须是 `Ctx fun.Ctx`，不需要 `fun:"auto"` 标签
-2. 守卫结构体不需要特殊的第一个字段
-3. 第一层依赖（直接依赖）不需要 `fun:"auto"` 标签
-4. 第二层及更深的依赖需要使用 `fun:"auto"` 标签
-5. 需要依赖注入的字段必须是导出的（首字母大写）
-6. 需要依赖注入的字段必须是指针类型
-7. 依赖注入的结构体必须是具体的结构体类型，不能是指针
-8. 结构体可以定义 `New` 方法进行初始化
-
 ## 最佳实践
 
-1. 保持依赖关系简单，避免复杂的依赖关系图
-2. 使用 `New` 方法进行依赖项的初始化
-3. 避免创建循环依赖
-4. 合理使用依赖注入，仅注入真正需要的依赖项
+1. **合理使用自动注入**：服务和拦截器的第一层字段会自动注入，无需添加 `fun:"auto"` 标签
+2. **嵌套依赖使用标签**：只有在嵌套结构中才需要使用 `fun:"auto"` 标签
+3. **初始化逻辑放在 New 方法中**：组件的初始化逻辑应该放在 [New]方法中
+4. **避免循环依赖**：设计组件时要注意避免循环依赖问题
+6. **单例模式**：通过依赖注入实现的组件默认是单例的
 
 ## 注意事项
 
-1. 依赖注入发生在服务注册时，而不是每次请求时
-2. 带有 `fun:"auto"` 标签的字段会被自动初始化并注入
-3. 每个类型的实例在同一个服务中是单例的
-4. `New` 方法是可选的，但如果存在则会在依赖注入完成后自动调用
+1. **结构体必须是导出的**：只有导出的结构体才能被正确注入
+2. **字段必须是导出的**：只有导出的字段才能被注入
+3. **New 方法必须无参数**：[New]方法不能有参数，且不能有返回值
+
+通过合理使用依赖注入，可以构建松耦合、易测试和易维护的应用程序。

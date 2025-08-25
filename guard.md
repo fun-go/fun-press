@@ -1,102 +1,208 @@
-# 守卫(Guard)
+# 拦截器
 
-## 概述
+## 什么是拦截器？
 
-在 Fun 框架中，守卫(Guard)是一种用于在服务方法执行前进行权限检查、身份验证或状态验证的机制。它允许您在请求到达具体业务逻辑之前执行预处理逻辑，确保只有满足特定条件的请求才能继续执行。
+拦截器（Guard）是 Fun 框架中用于在服务方法执行前进行预处理的组件。它们通常用于实现权限验证、身份认证、请求日志记录等通用逻辑。拦截器可以在方法执行前检查请求的合法性，并在必要时阻止方法的执行。
 
-## 守卫接口定义
+## 定义拦截器
 
-```go
-type Guard interface {
-    Guard(serviceName string, methodName string, state map[string]string) *Result[any]
-}
-```
+### 基本拦截器结构
 
-
-## 方法参数说明
-
-- `serviceName`: 被调用的服务名称
-- `methodName`: 被调用的方法名称
-- `state`: 客户端传递的状态信息，通常包含认证信息如 token 等
-
-## 返回值
-
-- 返回 `*Result[T]` 类型，如果验证失败，可以通过返回错误结果来阻止方法执行
-- 如果验证通过，应返回 `nil`
-
-## 工作原理
-
-1. 在服务方法被调用之前，框架会先执行所有相关的守卫
-2. 守卫按照注册顺序依次执行
-3. 如果任何一个守卫返回错误结果，整个调用链将被中断
-4. 只有当所有守卫都通过验证后，服务方法才会被执行
-
-## 守卫类型
-
-Fun 框架支持两种类型的守卫：
-
-### 1. 全局守卫
-
-全局守卫会对所有服务的所有方法生效。
-
-```go
-func init()  {
-    fun.BindGuard(AuthGuard{})
-}
-```
-
-
-### 2. 服务级别守卫
-
-服务级别守卫只对特定服务生效。
-
-```go
-fun.BindService(MyService{}, AuthGuard{})
-```
-
-
-## 使用示例
-
-### 基础守卫实现
+要定义一个拦截器，需要创建一个实现 [fun.Guard] 接口的结构体：
 
 ```go
 type AuthGuard struct {
     // 可以注入依赖
+    Config *Config
+    Redis  *RedisClient
 }
 
-func (g *AuthGuard) Guard(serviceName string, methodName string, state map[string]string) *Result[any] {
-    // 检查认证信息
-    token, exists := state["token"]
-    if !exists || !isValidToken(token) {
-        return &Result[any]{
-            Msg:    stringPtr("Unauthorized"),
-            Status: errorCode,
-        }
-    }
+func (g AuthGuard) Guard(ctx fun.Ctx) {
+    // 实现权限验证逻辑
+    // 如果验证失败，可以 panic 抛出错误
+}
+```
+
+
+### 拦截器方法
+
+拦截器必须实现 `Guard` 方法，该方法接收一个 [fun.Ctx] 参数，包含请求的上下文信息：
+
+```go
+func (g AuthGuard) Guard(ctx fun.Ctx) {
+    // 访问请求信息
+    token := ctx.State["token"]
+    ip := ctx.Ip
+    serviceName := ctx.ServiceName
+    methodName := ctx.MethodName
     
-    // 验证通过
-    return nil
+    // 实现验证逻辑
+    if !isValidToken(token) {
+        panic(fun.Error(401, "Unauthorized"))
+    }
 }
+```
 
-func stringPtr(s string) *string {
-    return &s
+
+## 依赖注入
+
+### 拦截器依赖注入
+
+与服务类似，拦截器也支持依赖注入。拦截器的第一层字段会自动注入：
+
+```go
+type AuthGuard struct {
+    // 第一层字段会自动注入
+    Config *Config
+    Redis  *RedisClient
+    Logger *Logger
 }
+```
 
-//全局注册守卫
-func init()  {
+
+对于嵌套结构中的字段，需要使用 `fun:"auto"` 标签：
+
+```go
+type Config struct {
+    // 嵌套结构中的字段需要使用 fun:"auto" 标签
+    Logger *Logger `fun:"auto"`
+}
+```
+
+
+## 注册拦截器
+
+### 全局拦截器
+
+可以通过 [fun.BindGuard] 方法注册全局拦截器，它将应用于所有服务：
+
+```go
+func init() {
     fun.BindGuard(AuthGuard{})
 }
 ```
-## 守卫执行顺序
 
-1. 全局守卫按照注册顺序执行
-2. 服务级别守卫按照注册顺序执行
-3. 所有守卫都必须通过验证，服务方法才会被执行
 
-## 注意事项
+### 服务级拦截器
 
-1. 守卫中可以通过返回特定的 [*Result] 来中断请求处理流程
-2. 守卫可以访问请求上下文中的状态信息，但不能修改请求参数
-3. 守卫的执行顺序很重要，应根据业务逻辑合理安排
-4. 避免在守卫中执行耗时操作，以免影响系统性能
-5. 合理使用全局守卫和服务守卫，避免重复验证
+可以通过 [fun.BindService] 方法为特定服务注册拦截器：
+
+```go
+func init() {
+    fun.BindService(UserService{}, AuthGuard{})
+}
+```
+
+
+## 实际示例
+
+### 身份验证拦截器
+
+```go
+type AuthGuard struct {
+    Redis *RedisClient
+}
+
+func (g AuthGuard) Guard(ctx fun.Ctx) {
+    // 检查是否存在 token
+    token, exists := ctx.State["token"]
+    if !exists {
+        panic(fun.Error(401, "Missing authentication token"))
+    }
+    
+    // 验证 token 有效性
+    if !g.isValidToken(token) {
+        panic(fun.Error(401, "Invalid token"))
+    }
+    
+    // 检查 token 是否已过期
+    if g.isTokenExpired(token) {
+        panic(fun.Error(401, "Token expired"))
+    }
+}
+
+func (g AuthGuard) isValidToken(token string) bool {
+    // 实现 token 验证逻辑
+    // ...
+    return true
+}
+
+func (g AuthGuard) isTokenExpired(token string) bool {
+    // 实现 token 过期检查逻辑
+    // ...
+    return false
+}
+```
+
+
+### 权限检查拦截器
+
+```go
+type PermissionGuard struct {
+    Database *Database
+}
+
+func (g PermissionGuard) Guard(ctx fun.Ctx) {
+    userID := ctx.State["userID"]
+    serviceName := ctx.ServiceName
+    methodName := ctx.MethodName
+    
+    // 检查用户是否有权限访问该服务方法
+    if !g.hasPermission(userID, serviceName, methodName) {
+        panic(fun.Error(403, "Insufficient permissions"))
+    }
+}
+
+func (g PermissionGuard) hasPermission(userID, serviceName, methodName string) bool {
+    // 查询数据库检查用户权限
+    // ...
+    return true
+}
+```
+
+
+## 多个拦截器
+
+可以为服务注册多个拦截器，它们将按注册顺序依次执行：
+
+```go
+func init() {
+    fun.BindService(
+        UserService{}, 
+        AuthGuard{},       // 首先执行身份验证
+        PermissionGuard{}, // 然后执行权限检查
+        LoggingGuard{},    // 最后执行日志记录
+    )
+}
+```
+
+
+## 错误处理
+
+在拦截器中，可以通过 `panic` 抛出错误来阻止服务方法的执行：
+
+```go
+func (g AuthGuard) Guard(ctx fun.Ctx) {
+    if !g.isAuthenticated(ctx.State["token"]) {
+        // 抛出错误，阻止方法执行
+        panic(fun.Error(401, "Authentication failed"))
+    }
+    
+    if !g.isAuthorized(ctx.ServiceName, ctx.MethodName) {
+        // 抛出错误，阻止方法执行
+        panic(fun.Error(403, "Access denied"))
+    }
+}
+```
+
+
+## 最佳实践
+
+1. **单一职责**：每个拦截器应该只负责一个特定的功能，如身份验证、权限检查等
+2. **轻量级**：拦截器应该尽可能轻量，避免执行耗时操作
+3. **错误处理**：在拦截器中使用 `panic(fun.Error())` 来抛出适当的错误
+4. **依赖注入**：合理使用依赖注入来获取所需的资源和服务
+5. **顺序考虑**：注意多个拦截器的执行顺序，确保逻辑正确性
+6. **日志记录**：在拦截器中添加适当的日志记录，便于调试和监控
+
+通过合理使用拦截器，可以将通用的验证和处理逻辑从服务方法中分离出来，使代码更加清晰和可维护。
