@@ -88,6 +88,80 @@ func (ctx UserService) GetUser(id int64) *User {
 }
 ```
 
+## 枚举（Enum）
+
+Fun 框架支持生成 TypeScript 枚举类型。要使用此功能，需要定义 `uint8` 类型并实现 `enum` 或 `displayEnum` 接口：
+
+#### 基础枚举
+
+```go
+// 实现 enum 接口
+type Status uint8
+
+func (s Status) Names() []string {
+    return []string{
+        "Active",
+        "Inactive",
+    }
+}
+```
+
+#### 显示枚举
+
+```go
+// 实现 displayEnum 接口
+type UserStatus uint8
+
+func (s UserStatus) Names() []string {
+    return []string{
+        "Active",
+        "Inactive",
+        "Pending",
+    }
+}
+
+func (s UserStatus) DisplayNames() []string {
+    return []string{
+        "已激活",
+        "未激活",
+        "待审核",
+    }
+}
+```
+
+生成的 TypeScript 代码：
+
+```typescript
+enum userStatus {
+  Active,
+  Inactive,
+  Pending,
+}
+
+export function userStatusDisplayName(value:userStatus): string | null {
+  switch (value) {
+    case userStatus.Active:
+      return '已激活';
+    case userStatus.Inactive:
+      return '未激活';
+    case userStatus.Pending:
+      return '待审核';
+    default:
+      return null;
+  }
+}
+
+export function userStatusDisplayNames(): string[] {
+  return [
+    '已激活',
+    '未激活',
+    '待审核',
+  ];
+}
+
+export default userStatus
+```
+
 
 ### DTO 类型映射
 
