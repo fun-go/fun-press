@@ -151,14 +151,6 @@ export function userStatusDisplayName(value:userStatus): string | null {
   }
 }
 
-export function userStatusDisplayNames(): string[] {
-  return [
-    '已激活',
-    '未激活',
-    '待审核',
-  ];
-}
-
 export default userStatus
 ```
 
