@@ -36,7 +36,7 @@ export default defineConfig({
       provider: 'local'
     },
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/chiyikj/fun' }
+      { icon: 'github', link: 'https://github.com/fun-go/fun' }
     ]
   }
 })

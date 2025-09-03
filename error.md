@@ -75,8 +75,8 @@ func (ctx UserService) GetUser(dto GetUserDto) *User {
 
 ```go
 type CreateUserDto struct {
-    Username string `validate:"required,min=3,max=20"`
-    Email    string `validate:"required,email"`
+    Username string `validate:"min=3,max=20"`
+    Email    string `validate:"email"`
     Age      int    `validate:"gte=0,lte=150"`
 }
 
@@ -109,7 +109,7 @@ func (ctx UserService) CreateUser(dto CreateUserDto) *User {
 客户端通过检查 `result.status` 来判断请求结果：
 
 ```typescript
-import { resultStatus, result } from "fun-client";
+import { resultStatus, result } from "./service/fun";
 
 const result = await client.userService.getUser({id: 123});
 

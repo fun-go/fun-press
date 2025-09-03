@@ -66,7 +66,7 @@ func (ctx UserService) GetUser(dto GetUserDto) *User {
 }
 
 type GetUserDto struct {
-    ID int64 `validate:"required"`
+    ID int64 
 }
 ```
 
@@ -226,7 +226,7 @@ func (ctx UserService) WatchUser(dto WatchUserDto, proxy fun.ProxyClose) *User {
 }
 
 type WatchUserDto struct {
-    ID int64 `validate:"required"`
+    ID int64 
 }
 ```
 
@@ -259,7 +259,7 @@ if (result.status === resultStatus.success) {
 ### 代理方法调用
 
 ```typescript
-import { on } from "fun-client";
+import { on } from "./service/fun";
 
 // 创建代理对象
 const proxy = new on<User | null>();
@@ -283,7 +283,7 @@ close();
 ### 错误处理
 
 ```typescript
-import { resultStatus } from "fun-client";
+import { resultStatus } from "./service/fun";
 
 const result = await client.userService.createUser({
     username: "testuser",
@@ -311,8 +311,7 @@ switch (result.status) {
 可以在客户端添加请求和响应拦截器：
 
 ```typescript
-import fun from "./dist/fun";
-import { result, resultStatus } from "fun-client";
+import fun,{ result, resultStatus } from "./service/fun";
 
 const client = fun.create("ws://localhost:3000");
 
@@ -354,14 +353,14 @@ type OrderService struct {
 ```go
 // 推荐：为不同场景创建不同的 DTO
 type CreateUserRequest struct {
-    Username string `validate:"required"`
-    Email    string `validate:"required,email"`
+    Username string 
+    Email    string `validate:"email"`
 }
 
 type UpdateUserRequest struct {
-    ID       int64  `validate:"required"`
-    Username *string `validate:"omitempty"`
-    Email    *string `validate:"omitempty,email"`
+    ID       int64  
+    Username *string 
+    Email    *string `validate:"email"`
 }
 ```
 
@@ -388,7 +387,7 @@ func (ctx NotificationService) WatchNotifications(dto WatchNotificationsDto, pro
 }
 
 type WatchNotificationsDto struct {
-    UserId int64 `validate:"required"`
+    UserId int64 
 }
 ```
 

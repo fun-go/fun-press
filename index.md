@@ -14,7 +14,7 @@ hero:
       link: /quick-start
     - theme: alt
       text: GitHub
-      link: https://github.com/chiyikj/fun
+      link: https://github.com/fun-go/fun
 
 
 

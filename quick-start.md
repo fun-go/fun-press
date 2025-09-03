@@ -9,7 +9,7 @@ Fun 是一个基于 WebSocket 的实时通信框架，本文档将指导你如�
 首先，使用以下命令安装 Fun 框架：
 
 ```bash
-go get github.com/chiyikj/fun
+go get github.com/fun-go/fun
 ```
 
 
@@ -22,7 +22,7 @@ go get github.com/chiyikj/fun
 package userService
 
 import (
-    "fun"
+    "github.com/fun-go/fun"
 )
 
 type UserService struct {
@@ -55,7 +55,7 @@ func init() {
 package main
 
 import (
-    "fun"
+    "github.com/fun-go/fun"
     _ "your-module/service/userService" // 导入你的服务
 )
 
@@ -104,7 +104,7 @@ go run main.go
 ### 2. 前端调用示例
 
 ```typescript
-import fun from "../gen/ts/fun";
+import fun from "./service/fun";
 
 // 创建客户端连接
 const api = fun.create("ws://localhost:3000");
@@ -122,8 +122,8 @@ console.log(result);
 ### 3. 完整的前端调用示例
 
 ```typescript
-import fun from "../gen/ts/fun";
-import type user from "../gen/ts/test/service/userService/user";
+import fun from "./service/fun";
+import type user from "./service/userService/user";
 
 // 创建客户端连接
 const api = fun.create("ws://localhost:3000");

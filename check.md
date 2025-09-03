@@ -82,13 +82,13 @@ type CreateUserDto struct {
     
     // 可选字段（指针类型）
     Nickname *string `validate:"max=50"`
-    Website  *string `validate:"omitempty,url"`
+    Website  *string `validate:"url"`
 }
 
 type UpdateUserDto struct {
     ID       int64   `validate:"gt=0"`
-    Username *string `validate:"omitempty,min=3,max=20,alphanum"`
-    Age      *int    `validate:"omitempty,gte=0,lte=150"`
+    Username *string `validate:"min=3,max=20,alphanum"`
+    Age      *int    `validate:"gte=0,lte=150"`
 }
 ```
 
@@ -250,7 +250,7 @@ type RegisterDto struct {
     Password string `validate:"min=8,max=50"`
     Email    string `validate:"email"`
     // 验证码，可选但在某些情况下必填
-    Code *string `validate:"omitempty,len=6"`
+    Code *string `validate:"len=6"`
 }
 ```
 
