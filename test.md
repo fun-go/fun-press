@@ -8,7 +8,7 @@ Fun 框架提供了内置的测试工具，可以方便地对服务进行单元�
 
 ### 测试函数定义
 
-测试函数需要遵循 Go 语言的测试规范，以 [Test] 开头并接收 `*testing.T` 参数：
+测试函数需要遵循 Go 语言的测试规范，以 `Test` 开头并接收 `*testing.T` 参数：
 
 ```go
 func TestGetPuzzleCode(t *testing.T) {
@@ -21,7 +21,7 @@ func TestGetPuzzleCode(t *testing.T) {
 
 ### GetRequestInfo 函数
 
-使用 [fun.GetRequestInfo] 函数创建测试请求：
+使用 `fun.GetRequestInfo` 函数创建测试请求：
 
 ```go
 request := fun.GetRequestInfo(
@@ -35,7 +35,7 @@ request := fun.GetRequestInfo(
 
 
 参数说明：
-- `[t]`: [testing.T]实例
+- `[t]`: `testing.T`实例
 - `[service]`: 服务实例
 - `[methodName]`: 要测试的方法名
 - `[dto]`: DTO 数据（方法参数），可以是 nil 或具体的数据结构
@@ -45,7 +45,7 @@ request := fun.GetRequestInfo(
 
 ### MockRequest 函数
 
-使用 [fun.MockRequest] 函数执行模拟请求：
+使用 `fun.MockRequest` 函数执行模拟请求：
 
 ```go
 result := fun.MockRequest[*ReturnType](t, request)

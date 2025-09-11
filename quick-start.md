@@ -15,7 +15,7 @@ go get github.com/fun-go/fun
 
 ### 2. 定义服务
 
-创建一个服务文件，例如 [userService.go]：
+创建一个服务文件，例如 `userService.go`：
 
 ```go
 // userService.go
@@ -48,7 +48,7 @@ func init() {
 
 ### 3. 启动服务
 
-创建主程序文件 [main.go]：
+创建主程序文件 `main.go`：
 
 ```go
 // main.go
@@ -77,7 +77,7 @@ go run main.go
 
 ## 📁 代码生成位置
 
-执行 [fun.Gen()] 后，框架会自动生成 TypeScript 客户端代码到以下目录：
+执行 `fun.Gen()` 后，框架会自动生成 TypeScript 客户端代码到以下目录：
 
 ```
 ../gen/ts/
@@ -90,7 +90,7 @@ go run main.go
 
 ### 1. 生成的代码结构
 
-执行 [fun.Gen()] 后，框架会在 `../gen/ts/` 目录下生成以下代码：
+执行 `fun.Gen()` 后，框架会在 `../gen/ts/` 目录下生成以下代码：
 
 ```
 ../gen/ts/

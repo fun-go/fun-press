@@ -2,7 +2,7 @@
 
 ## 概述
 
-`Future[T]` 和 [FutureVoid] 是框架提供的异步编程工具，用于简化并发任务处理。它们自动管理 goroutine 并提供线程安全保障，开发者可以安全地在多线程环境中使用。
+`Future[T]` 和 `FutureVoid` 是框架提供的异步编程工具，用于简化并发任务处理。它们自动管理 goroutine 并提供线程安全保障，开发者可以安全地在多线程环境中使用。
 
 ## Future[T] 使用
 
@@ -140,7 +140,7 @@ for i, err := range errors {
 
 ## 最佳实践
 
-1. **使用 panic 简化错误处理**：在 [NewFuture] 和 [NewFutureVoid] 回调中可以直接使用 panic，框架会自动处理
+1. **使用 panic 简化错误处理**：在 `NewFuture` 和 `NewFutureVoid` 回调中可以直接使用 panic，框架会自动处理
 2. **批量操作使用 AllFuture/AllFutureVoid**：当需要等待多个任务完成时，使用批量等待函数更高效
-3. **及时处理结果**：创建的 Future/FutureVoid 应及时调用 [Join()] 或使用批量函数处理结果
-4. **合理选择类型**：有返回值的任务使用 `Future[T]`，无返回值的任务使用 [FutureVoid]
+3. **及时处理结果**：创建的 Future/FutureVoid 应及时调用 `Join()` 或使用批量函数处理结果
+4. **合理选择类型**：有返回值的任务使用 `Future[T]`，无返回值的任务使用 `FutureVoid`

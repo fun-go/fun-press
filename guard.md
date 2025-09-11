@@ -8,7 +8,7 @@
 
 ### 基本拦截器结构
 
-要定义一个拦截器，需要创建一个实现 [fun.Guard] 接口的结构体：
+要定义一个拦截器，需要创建一个实现 `fun.Guard` 接口的结构体：
 
 ```go
 type AuthGuard struct {
@@ -26,7 +26,7 @@ func (g AuthGuard) Guard(ctx fun.Ctx) {
 
 ### 拦截器方法
 
-拦截器必须实现 `Guard` 方法，该方法接收一个 [fun.Ctx] 参数，包含请求的上下文信息：
+拦截器必须实现 `Guard` 方法，该方法接收一个 `fun.Ctx` 参数，包含请求的上下文信息：
 
 ```go
 func (g AuthGuard) Guard(ctx fun.Ctx) {
@@ -74,7 +74,7 @@ type Config struct {
 
 ### 全局拦截器
 
-可以通过 [fun.BindGuard] 方法注册全局拦截器，它将应用于所有服务：
+可以通过 `fun.BindGuard` 方法注册全局拦截器，它将应用于所有服务：
 
 ```go
 func init() {
@@ -85,7 +85,7 @@ func init() {
 
 ### 服务级拦截器
 
-可以通过 [fun.BindService] 方法为特定服务注册拦截器：
+可以通过 `fun.BindService` 方法为特定服务注册拦截器：
 
 ```go
 func init() {

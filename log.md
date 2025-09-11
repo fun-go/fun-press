@@ -19,7 +19,7 @@ Fun 框架支持以下日志级别，按严重程度从低到高排列：
 
 ### Logger 结构体
 
-通过配置 [Logger] 结构体来设置日志系统的行为：
+通过配置 `Logger` 结构体来设置日志系统的行为：
 
 ```go
 type Logger struct {
