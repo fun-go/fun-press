@@ -27,6 +27,7 @@ export default defineConfig({
           { text: '单元测试' , link: '/test' },
           { text: '日志系统', link: '/log'},
           { text: '参数验证' , link: '/check'},
+          { text: '线程' , link: '/future'},
           { text: '代码生成', link: '/gen' },
           { text: '错误处理', link: '/error' },
         ]
