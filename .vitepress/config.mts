@@ -8,6 +8,9 @@ export default defineConfig({
     ['link', { rel: 'icon', href: 'https://minio.cyi.cc/ssl/system/image/favicon.ico' }],
     ['meta', { name: 'keywords', content: 'Fun框架, Go语言WebSocket框架, WebSocket服务, 实时通信框架, Go后端框架, 微服务框架, WebSocket通信, Gorilla WebSocket, 依赖注入, 结构体验证, 服务治理, 实时推送, RPC框架, Go Web框架' }]
   ],
+  sitemap: {
+    hostname: 'https://fungo.ink'
+  },
   themeConfig: {
     nav: [
       { text: '首页', link: '/' },
