@@ -4,7 +4,7 @@ layout: home
 
 hero:
   name: "Fun"
-  tagline: Fun 是一个现代化的实时应用框架，专为构建基于 WebSocket 的后端服务而设计。它提供了一套简洁而强大的工具，帮助开发者快速构建具有实时通信功能的应用程序。
+  tagline: Fun 是一个现代化的实时应用框架，专为构建基于Web的后端服务而设计。它提供了一套简洁而强大的工具，帮助开发者快速构建具有实时通信功能的应用程序。
   actions:
     - theme: brand
       text: 什么是fun?
