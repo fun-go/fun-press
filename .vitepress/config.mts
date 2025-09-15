@@ -2,7 +2,7 @@ import { defineConfig } from 'vitepress'
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
-  title: "fun",
+  title: "Fun",
   description: "fun是一个现代化Web实时应用框架，专为构建高并发低延迟的后端服务而设计。提供简洁强大的工具集，支持快速开发聊天应用、实时游戏等场景，内置依赖注入和代码自动生成功能，提升开发效率，简化复杂业务逻辑实现。适用于需要实时通信的各种应用场景，包括在线教育、远程办公、社交娱乐等，帮助开快速构建稳定可靠的后端应用。" ,
   head: [
     ['link', { rel: 'icon', href: 'https://minio.cyi.cc/ssl/system/image/favicon.ico' }],
@@ -22,7 +22,7 @@ export default defineConfig({
       {
         text: '',
         items: [
-          { text: '什么是fun?', link: '/fun' },
+          { text: '什么是Fun?', link: '/fun' },
           { text: '快速入门', link: '/quick-start' },
           { text: '服务', link: '/service' },
           { text: '拦截器', link: '/guard' },
